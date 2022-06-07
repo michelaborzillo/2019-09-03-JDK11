@@ -6,7 +6,10 @@ package it.polito.tdp.food;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.food.model.Adiacenza;
 import it.polito.tdp.food.model.Model;
+import it.polito.tdp.food.model.Portion;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -40,28 +43,65 @@ public class FoodController {
     private Button btnCammino; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxPorzioni"
-    private ComboBox<?> boxPorzioni; // Value injected by FXMLLoader
+    private ComboBox<String> boxPorzioni; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
 
     @FXML
     void doCammino(ActionEvent event) {
-    	txtResult.clear();
-    	txtResult.appendText("Cerco cammino peso massimo...");
+    	String porzione= boxPorzioni.getValue();
+    	if (porzione==null) {
+    		txtResult.appendText("ERRORE: devi selezionare una porzione\n");
+		return ;
+    	}
+    	Integer N ;
+    	try {
+    		N = Integer.parseInt(txtPassi.getText()) ;
+    	} catch(NumberFormatException ex) {
+    		txtResult.appendText("ERRORE: il valore "+txtPassi.getText()+" non è un numero intero\n");
+    		return ;
+    	}
+    	model.cercaLista(porzione, N);
+    	
+    	if(model.best==null) {
+    		txtResult.appendText("Non ho trovato un cammino di lunghezza N\n");
+    	} else {
+    		txtResult.appendText("Trovato un cammino di peso "+model.max+"\n");
+    		for(String vertice : model.best) {
+    			txtResult.appendText(vertice+"\n");
+    		}
+    	}
+    	
     }
 
     @FXML
     void doCorrelate(ActionEvent event) {
-    	txtResult.clear();
-    	txtResult.appendText("Cerco porzioni correlate...");
-    	
+    	String p= boxPorzioni.getValue();
+    	model.getAdiacenza(p);
+    	for (Adiacenza po: model.getAdiacenza(p)) {
+    		txtResult.setText(po+"\n");
+    	}
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Creazione grafo...");
+    	String calor=txtCalorie.getText();
+    	try {
+    		int calorie= Integer.parseInt(calor);
+    		model.creaGrafo(calorie);
+    		txtResult.appendText("Grafo creato!\n");
+    		txtResult.appendText("VERTICI: "+this.model.nVertici()+"\n");
+        	txtResult.appendText("ARCHI: "+this.model.nArchi()+"\n");
+        	boxPorzioni.getItems().clear();
+        	boxPorzioni.getItems().addAll(this.model.getVertici(calorie));
+    	} catch (NumberFormatException e) {
+    		txtResult.setText("Devi inserire un numero valido");
+    		return;
+    	}
+    	
+    	
     	
     }
 
@@ -72,7 +112,7 @@ public class FoodController {
         assert btnAnalisi != null : "fx:id=\"btnAnalisi\" was not injected: check your FXML file 'Food.fxml'.";
         assert btnCorrelate != null : "fx:id=\"btnCorrelate\" was not injected: check your FXML file 'Food.fxml'.";
         assert btnCammino != null : "fx:id=\"btnCammino\" was not injected: check your FXML file 'Food.fxml'.";
-        assert boxPorzioni != null : "fx:id=\"boxPorzioni\" was not injected: check your FXML file 'Food.fxml'.";
+        //assert boxPorzioni != null : "fx:id=\"boxPorzioni\" was not injected: check your FXML file 'Food.fxml'.";
         assert txtResult != null : "fx:id=\"txtResult\" was not injected: check your FXML file 'Food.fxml'.";
 
     }
