@@ -12,6 +12,8 @@ import it.polito.tdp.food.model.Adiacenza;
 import it.polito.tdp.food.model.Condiment;
 import it.polito.tdp.food.model.Food;
 import it.polito.tdp.food.model.Portion;
+import it.polito.tdp.food.model.Vertici;
+
 
 
 public class FoodDao {
@@ -78,82 +80,38 @@ public class FoodDao {
 		}
 	}
 	
-	public List<Portion> listAllPortions(){
-		String sql = "SELECT * FROM portion" ;
-		try {
-			Connection conn = DBConnect.getConnection() ;
-
-			PreparedStatement st = conn.prepareStatement(sql) ;
-			
-			List<Portion> list = new ArrayList<>() ;
-			
-			ResultSet res = st.executeQuery() ;
-			
-			while(res.next()) {
-				try {
-					list.add(new Portion(res.getInt("portion_id"),
-							res.getDouble("portion_amount"),
-							res.getString("portion_display_name"), 
-							res.getDouble("calories"),
-							res.getDouble("saturated_fats"),
-							res.getInt("food_code")
-							));
-				} catch (Throwable t) {
-					t.printStackTrace();
-				}
-			}
-			
-			conn.close();
-			return list ;
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null ;
-		}
-
-	}
+	public List<Vertici> getVertici (int nCalorie) {
+		String sql="SELECT p.portion_display_name AS nome, p.portion_id AS id "
+				+ "FROM `portion` p "
+				+ "WHERE p.calories<? "
+				+ "GROUP BY p.portion_display_name";
 	
+	Connection conn= DBConnect.getConnection();
+	List<Vertici> result = new ArrayList<Vertici>();
+	try {
+		PreparedStatement st = conn.prepareStatement(sql);
+		st.setInt(1, nCalorie);
 	
-	public List<String> getVertici (double nCalorie) {
-		String sql="SELECT DISTINCT portion_display_name "
-				+ "FROM `portion` "
-				+ "WHERE calories<?";
-		try {
-			Connection conn = DBConnect.getConnection() ;
-
-			PreparedStatement st = conn.prepareStatement(sql) ;
-			st.setDouble(1, nCalorie);
-			
-			List<String> list = new ArrayList<>() ;
-			
-			ResultSet res = st.executeQuery() ;
-			
-			while(res.next()) {
-				try {
-					String s= res.getString("portion_display_name");
-					
-					list.add(s);
-				} catch (Throwable t) {
-					t.printStackTrace();
-				}
-			}
-			
-			conn.close();
-			return list ;
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null ;
-		}
-
+		ResultSet res=st.executeQuery();
+		while (res.next()) {
 		
+			Vertici v= new Vertici(res.getInt("id"), res.getString("nome"));
+			result.add(v);
+		}
+		conn.close();
+		return result;
+	} catch (SQLException e) {
+		e.printStackTrace();
+		return null;
 	}
-	public List<Adiacenza> getCoppie (Map<Integer, Portion> idMap) {
-		String sql="SELECT p1.portion_id AS p1, p2.portion_id AS p2, COUNT(f.food_code) AS peso "
+	
+	}
+	public List<Adiacenza> getArchi() {
+		String sql="SELECT p1.portion_id AS p1id, p2.portion_id AS p2id, p1.portion_display_name p1name, p2.portion_display_name p2name, (f.food_code) AS peso "
 				+ "FROM `portion` p1, food f, `portion` p2 "
 				+ "WHERE  f.food_code=p1.food_code AND f.food_code=p2.food_code AND p1.portion_id<>p2.portion_id "
 				+ "GROUP BY p1.food_code "
-				+"HAVING peso >=2";
+				+ "HAVING peso >=2";
 		Connection conn= DBConnect.getConnection();
 		List<Adiacenza> result= new ArrayList<Adiacenza>();
 		
@@ -161,13 +119,11 @@ public class FoodDao {
 			PreparedStatement st = conn.prepareStatement(sql);
 			ResultSet res=st.executeQuery();
 			while (res.next()) {
-				String p1=res.getString("p1");
-				String p2= res.getString("p2");
-//				idMap.put(p1.getPortion_id(), p1);
-//				idMap.put(p2.getPortion_id(), p2);
-				if (p1!=null && p2!=null)
-				result.add(new Adiacenza(p1, p2, (int)res.getDouble("peso")));
-				
+				Vertici v1= new Vertici (res.getInt("p1id"), res.getString("p1name"));
+				Vertici v2= new Vertici (res.getInt("p2id"), res.getString("p2name"));
+				if (v1!=null && v2!=null) {
+					result.add(new Adiacenza(v1, v2, res.getInt("peso")));
+				}
 			}conn.close();
 			return result;
 		} catch (SQLException e) {
@@ -201,5 +157,8 @@ public class FoodDao {
 		
 		
 	}
+	
+	
+	
 
 }

@@ -10,6 +10,7 @@ import java.util.ResourceBundle;
 import it.polito.tdp.food.model.Adiacenza;
 import it.polito.tdp.food.model.Model;
 import it.polito.tdp.food.model.Portion;
+import it.polito.tdp.food.model.Vertici;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -43,43 +44,43 @@ public class FoodController {
     private Button btnCammino; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxPorzioni"
-    private ComboBox<String> boxPorzioni; // Value injected by FXMLLoader
+    private ComboBox<Vertici> boxPorzioni; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
 
     @FXML
     void doCammino(ActionEvent event) {
-    	String porzione= boxPorzioni.getValue();
-    	if (porzione==null) {
-    		txtResult.appendText("ERRORE: devi selezionare una porzione\n");
+    Vertici porzione= boxPorzioni.getValue();
+    
+    if (porzione==null) {
+		txtResult.appendText("ERRORE: devi selezionare una porzione\n");
+	return ;
+	}
+	Integer N ;
+	try {
+		N = Integer.parseInt(txtPassi.getText()) ;
+	} catch(NumberFormatException ex) {
+		txtResult.appendText("ERRORE: il valore "+txtPassi.getText()+" non è un numero intero\n");
 		return ;
-    	}
-    	Integer N ;
-    	try {
-    		N = Integer.parseInt(txtPassi.getText()) ;
-    	} catch(NumberFormatException ex) {
-    		txtResult.appendText("ERRORE: il valore "+txtPassi.getText()+" non è un numero intero\n");
-    		return ;
-    	}
-    	model.cercaLista(porzione, N);
-    	
-    	if(model.best==null) {
-    		txtResult.appendText("Non ho trovato un cammino di lunghezza N\n");
-    	} else {
-    		txtResult.appendText("Trovato un cammino di peso "+model.max+"\n");
-    		for(String vertice : model.best) {
-    			txtResult.appendText(vertice+"\n");
-    		}
-    	}
-    	
+	}
+	model.cercaLista(porzione, N);
+	
+	if(model.best==null) {
+		txtResult.appendText("Non ho trovato un cammino di lunghezza N\n");
+	} else {
+		txtResult.appendText("Trovato un cammino di peso "+model.max+"\n");
+		for(Vertici vertice : model.best) {
+			txtResult.appendText(vertice+"\n");
+		}
+	}
     }
 
     @FXML
     void doCorrelate(ActionEvent event) {
-    	String p= boxPorzioni.getValue();
-    	model.getAdiacenza(p);
-    	for (Adiacenza po: model.getAdiacenza(p)) {
+    	Vertici v= boxPorzioni.getValue();
+    	model.getAdiacenza(v);
+    	for (Adiacenza po: model.getAdiacenza(v)) {
     		txtResult.setText(po+"\n");
     	}
     }
